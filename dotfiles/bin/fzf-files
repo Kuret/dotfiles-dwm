@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Searches files using Rofi
+# Requires RipGrep and Rofi
+rg -L --sort-files --files --no-messages $@ | fzf

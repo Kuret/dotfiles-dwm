@@ -1,0 +1,44 @@
+[background]
+background = "#282828"
+
+[foreground]
+foreground = "#ebdbb2"
+
+[global]
+monitor = 0
+follow = none
+geometry = "400x200-20+42"
+indicate_hidden = yes
+shrink = yes
+transparency = 10
+separator_height = 0
+padding = 16
+horizontal_padding = 24
+frame_width = 1
+frame_color = "#ebdbb2"
+idle_threshold = 120
+font = Consolas Nerd Font 12
+line_height = 4
+markup = full
+format = "<b>%s</b>\n%b"
+alignment = left
+show_age_threshold = 60
+word_wrap = yes
+ignore_newline = no
+stack_duplicates = false
+hide_duplicate_count = yes
+show_indicators = no
+icon_position = off
+always_run_script = true
+title = Dunst
+class = Dunst
+
+
+[urgency_low]
+timeout = 4
+
+[urgency_normal]
+timeout = 8
+
+[urgency_critical]
+timeout = 0

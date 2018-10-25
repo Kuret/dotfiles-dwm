@@ -1,0 +1,20 @@
+! X11 style
+Xcursor.theme: Breeze_Obsidian
+Xcursor.size: 16
+
+! Rofi
+rofi.terminal: alacritty
+rofi.combi-modi: window,drun,run
+rofi.modi: window,drun,run,ssh,combi
+rofi.show-icons: true
+rofi.padding: 10
+rofi.separator-style: none
+rofi.hide-scrollbar: true
+rofi.lines: 10
+
+! 'background', 'border', 'dividing line'
+rofi.color-window:	    #141414, #141414, #CCCCCC
+!                       'bg',   'fg'    'bgalt'   'hlbg'   'hlfg'
+rofi.color-normal:	    #141414, #CCCCCC, #141414, #CCCCCC, #141414
+rofi.color-active:	    #141414, #4183C4, #141414, #CCCCCC, #141414
+rofi.color-urgent:          #141414, #4183C4, #141414, #CCCCCC, #141414

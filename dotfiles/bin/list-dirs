@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -f "$PWD/.dignore" ]; then
+  IFS=$'\n' read -d '' -r -a LINES < $PWD/.dignore
+fi
+
+for i in "${LINES[@]}"
+do
+  IGNORE="$IGNORE -type d -name \"$i\" -prune -o"
+done
+
+eval "find $@ $IGNORE -type d -print"

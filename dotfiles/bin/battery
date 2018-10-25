@@ -1,0 +1,8 @@
+#!/bin/bash
+
+BAT_LEVEL=$(cat /sys/class/power_supply/BAT0/capacity)
+BAT_STATUS=$(cat /sys/class/power_supply/BAT0/status)
+
+if [ "$BAT_STATUS" != "Full" ]; then
+  echo "$BAT_LEVEL"
+fi

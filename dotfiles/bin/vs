@@ -1,0 +1,60 @@
+#!/bin/bash
+stty sane; stty -echoctl
+
+if [ $(id -u) != 0 ]; then
+  sudo -v
+fi
+
+SCRIPT_LOC=$(readlink -f "$0")
+
+echo
+
+if [ "$#" -lt 1 ]; then
+  echo -e "\e[1mSelect an action:\e[0m"
+  echo "f) Find installed services"
+  echo "e) Enable a service"
+  echo "d) Disable a service"
+  echo "s) Start a service"
+  echo "x) Stop a service"
+  echo "r) Restart a service"
+  echo "c) Exit"
+  echo
+
+  read -n 1 -s choice
+
+  case $choice in
+    c) exit 0 ;;
+    f|e|d|s|x|r) exec $SCRIPT_LOC $choice ;;
+    *) exec $SCRIPT_LOC ;;
+  esac
+elif [ "$#" -eq 1 ]; then
+  case $1 in
+    f|e|d|s|x|r)
+      echo -e -n "\e[1mEnter service name: \e[0m"
+      read svname
+      [ -z "$svname" ] && exit 0
+      exec $SCRIPT_LOC $1 $svname
+      ;;
+    *) exec $SCRIPT_LOC ;;
+  esac
+elif [ "$#" -eq 2 ]; then
+  case $1 in
+    f)
+      sudo ls /etc/sv | grep $2 | while read -r line; do
+        status=$([ -d /var/service/$line ] && echo -e "(\e[32menabled\e[0m)" || echo -e "(\e[31mdisabled\e[0m)")
+        echo $line $status
+      done
+      ;;
+    e)
+      [ ! -d /etc/sv/$2 ] && echo "Service does not exist" && exit 0
+      [ -d /var/service/$2 ] && echo "Service already linked" && exit 0
+      sudo ln -s /etc/sv/$2 /var/service/ && echo "Service ${2} enabled"
+      ;;
+    d) [ -d /var/service/$2 ] && sudo rm -r /var/service/$2 || echo "Service does not exist" && exit 0 ;;
+    s) [ -d /var/service/$2 ] && sudo sv start $2 || echo "Service does not exist" && exit 0 ;;
+    x) [ -d /var/service/$2 ] && sudo sv stop $2 || echo "Service does not exist" && exit 0 ;;
+    r) [ -d /var/service/$2 ] && sudo sv restart $2 || echo "Service does not exist" && exit 0 ;;
+    *) exec $SCRIPT_LOC ;;
+  esac
+fi
+

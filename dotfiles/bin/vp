@@ -1,0 +1,48 @@
+#!/bin/bash
+stty sane; stty -echoctl
+
+if [ $(id -u) != 0 ]; then
+  sudo -v
+fi
+
+SCRIPT_LOC=$(readlink -f "$0")
+
+echo
+
+if [ "$#" -lt 1 ]; then
+  echo -e "\e[1mSelect an action:\e[0m"
+  echo "i) Install a package"
+  echo "u) Update all packages"
+  echo "r) Remove a package and dependencies"
+  echo "s) Search the packages repo"
+  echo "c) Exit"
+  echo
+
+  read -n 1 -s choice
+
+  case $choice in
+    c) exit 0 ;;
+    i|u|r|s) exec $SCRIPT_LOC $choice ;;
+    *) exec $SCRIPT_LOC ;;
+  esac
+elif [[ "$#" -eq 1 && "$1" = "u" ]]; then
+  sudo xbps-install -Suv
+elif [ "$#" -eq 1 ]; then
+  case $1 in
+    i|r|s)
+      echo -n -e "\e[1mEnter package name(s): \e[0m"
+      read pkgname
+      [ -z "$pkgname" ] && exit 0
+      exec $SCRIPT_LOC $1 $pkgname
+      ;;
+    *) exec $SCRIPT_LOC ;;
+  esac
+elif [ "$#" -gt 1 ]; then
+  case $1 in
+    i) sudo xbps-install -S "${@:2}" ;;
+    r) sudo xbps-remove -R "${@:2}" ;;
+    s) sudo xbps-query -Rs "${@:2}" ;;
+    *) exec $SCRIPT_LOC ;;
+  esac
+fi
+

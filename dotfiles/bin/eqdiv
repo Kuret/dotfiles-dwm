@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ "$#" -ne 2 ]; then
+  echo "Two numbers are required"
+  exit 0
+fi
+
+# Number to divide into parts
+NUM=$1
+
+# Amount of parts to divide into
+DIV=$2
+
+# Amount of parts minus 1
+SDIV=$(($DIV - 1))
+
+# Number of parts, except the first (biggest) part
+NUMS=$(($NUM/$DIV))
+
+# First part, which can potentially be bigger
+# if no equal divide is possible
+FIRST=$(($NUM - ($SDIV * $NUMS)))
+
+# Print biggest part first, then the rest
+echo $FIRST
+seq $SDIV | xargs -I{} echo $NUMS
+

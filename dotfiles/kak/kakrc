@@ -1,0 +1,169 @@
+colorscheme gruvbox
+face global Default default,default
+face global BufferPadding default,default
+
+# Line numbers
+#hook global WinCreate .* %{ add-highlighter number-lines -relative -hlcursor }
+add-highlighter global/ number-lines -relative -hlcursor
+
+# Set tab to 2 spaces
+set global tabstop 2
+set global indentwidth 2
+
+# Autoreload externally modified files
+set global autoreload yes
+
+# Clipboard share
+hook global NormalKey y|d|c %{ nop %sh{
+  printf %s "$kak_main_reg_dquote" | xsel --input --clipboard
+}}
+
+
+# Insert spaces instead of tabs
+hook global InsertChar \t %{ exec -draft -itersel h@ } -group kakrc-replace-tabs-with-spaces
+
+# jj to exit insert mode
+hook global InsertChar j %{ try %{
+  exec -draft hH <a-k>jj<ret> d
+  exec <esc>
+}}
+
+# change cursor color on insert mode
+hook global InsertBegin .* %{
+  face buffer PrimaryCursor rgb:282828,rgb:fabd2f
+}
+
+hook global NormalBegin .* %{
+  face buffer PrimaryCursor rgb:282828,rgb:ebdbb2
+}
+
+# Tab completion
+hook global InsertCompletionShow .* %{
+  map buffer insert <tab> <c-n>
+  map buffer insert <s-tab> <c-p>
+}
+
+hook global InsertCompletionHide .* %{
+  unmap buffer insert <tab> <c-n>
+  unmap buffer insert <s-tab> <c-p>
+}
+
+# User mapping
+# Set leader to space and space to leader
+map global normal <space> , -docstring 'leader'
+map global normal , <space> -docstring 'remove all sels except main'
+map global normal <a-,> <a-space> -docstring 'remove main sel'
+
+# Global maps
+map global user r '!xsel --output --clipboard<ret>d'
+map global user P '!xsel --output --clipboard<ret>'
+map global user p '<a-!>xsel --output --clipboard<ret>'
+
+map global user f ':fzf-files<ret>'
+map global user <space> ':x11-new<ret>'
+
+# Elixir
+hook global BufCreate .*[.](ex|eex) %{
+  # Set filetype to elixir for .eex templates
+  set-option buffer filetype elixir
+}
+
+hook global BufCreate .*[.](exs) %{
+  def test-options %{on-key %{ %sh{
+    case "$kak_key" in
+      t) echo mix-test-current ;;
+      a) echo mix-test-all ;;
+      f) echo mix-test-file ;;
+      x) echo mix-test-failed ;;
+    esac
+  }}}
+
+  map global user t ':test-options<ret>'
+}
+
+hook global WinSetOption filetype=elixir %{
+  # Format on save
+  hook buffer BufWritePost .*[.](ex|exs) mix-format
+
+  def ex-options %{on-key %{ %sh{
+    case "$kak_key" in
+      v) echo ex-view-switch ;;
+      t) echo ex-test-switch ;;
+    esac
+  }}}
+  
+  map global user e ':ex-options<ret>'
+}
+
+def fzf-files \
+-docstring 'Select files in project using Rg and fzf' %{nop %sh{
+  FILE=$(st -c term_floating -e sh -c 'center-window && rg -L --files | fzf > /tmp/fzf-file' && cat /tmp/fzf-file)
+  if [ -n "$FILE" ]; then
+    echo "eval -client '$kak_client' 'edit ${FILE}'" | kak -p ${kak_session}
+  fi
+}}
+
+def ex-test-switch \
+-docstring 'Switch between view and template' %{nop %sh{
+  if [ -d "${PWD}/lib" ] && [ -d "$PWD/test" ]; then
+    FILE=$(basename $kak_buffile)
+    
+    F_PATH=$(dirname $(realpath --relative-to="$PWD" "$kak_buffile"))
+    F_DIR=$(basename $F_PATH)
+    REL_PATH=${F_PATH#*/}
+
+    if [ "${F_PATH#lib/}" != "${F_PATH}" ] && [ -e "${PWD}/test/${REL_PATH}/${FILE%.*}_test.exs" ]; then
+      echo "eval -client '$kak_client' 'edit ${PWD}/test/${REL_PATH}/${FILE%.*}_test.exs'" | kak -p ${kak_session}
+    elif [ "${F_PATH#lib/}" != "${F_PATH}" ] && [ -e "${PWD}/test/${REL_PATH%/*.*}_view_test.exs" ]; then
+      echo "eval -client '$kak_client' 'edit ${PWD}/test/${REL_PATH%/*.*}_view_test.exs'" | kak -p ${kak_session}
+    elif [ "${F_PATH#lib/}" != "${F_PATH}" ] && [ -e "${PWD}/test/${REL_PATH%/*.*}/${F_DIR}_test.exs" ]; then
+      echo "eval -client '$kak_client' 'edit ${PWD}/test/${REL_PATH%/*.*}/${F_DIR}_test.exs'" | kak -p ${kak_session}
+    elif [ "${F_PATH#test/}" != "${F_PATH}" ] && [ -e "${PWD}/lib/${REL_PATH}/${FILE%_test.*}.ex" ]; then
+      echo "eval -client '$kak_client' 'edit ${PWD}/lib/${REL_PATH}/${FILE%_test.*}.ex'" | kak -p ${kak_session}
+    elif [ "${F_PATH#test/}" != "${F_PATH}" ] && [ -e "${PWD}/lib/${REL_PATH}/${FILE%_view_test.*}/template.html.eex" ]; then
+      echo "eval -client '$kak_client' 'edit ${PWD}/lib/${REL_PATH}/${FILE%_view_test.*}/template.html.eex'" | kak -p ${kak_session}
+    elif [ "${F_PATH#test/}" != "${F_PATH}" ] && [ -e "${PWD}/lib/${REL_PATH}/template.html.eex" ]; then
+      echo "eval -client '$kak_client' 'edit ${PWD}/lib/${REL_PATH}/template.html.eex'" | kak -p ${kak_session}
+    fi
+  fi
+}}
+
+def ex-view-switch \
+-docstring 'Switch between view and template' %{nop %sh{
+  FILE_DIR=$(dirname $kak_buffile)
+  FILE=$(basename $kak_buffile)
+
+  if [ $FILE = "template.html.eex" ] && [ -e "${FILE_DIR}/view.ex" ]; then
+    echo "eval -client '$kak_client' 'edit ${FILE_DIR}/view.ex'" | kak -p ${kak_session}
+  elif [ $FILE = "view.ex" ] && [ -e "${FILE_DIR}/template.html.eex" ]; then
+    echo "eval -client '$kak_client' 'edit ${FILE_DIR}/template.html.eex'" | kak -p ${kak_session}
+  fi
+}}
+
+# Mix Formatter
+def mix-format \
+-docstring 'Format Elixir code' %{nop %sh{
+  mix format $kak_buffile || notify-send "Error running mix format"
+}}
+
+# Mix Test
+def mix-test-all \
+-docstring 'Run all tests in the working directory' %{nop %sh{
+  st -c term_floating -e sh -c 'center-window && mix test --stale && read || read' > /dev/null 2>&1 < /dev/null &
+}}
+
+def mix-test-failed \
+-docstring 'Run all previously failed tests' %{nop %sh{
+  st -c term_floating -e sh -c 'center-window && mix test --failed && read || read' > /dev/null 2>&1 < /dev/null &
+}}
+
+def mix-test-file \
+-docstring 'Run all tests in the current file' %{nop %sh{
+  st -c term_floating -e sh -c 'center-window && mix test ${kak_buffile} && read || read' > /dev/null 2>&1 < /dev/null &
+}}
+
+def mix-test-current \
+-docstring 'Run the test(s) under the cursor' %{nop %sh{
+  st -c term_floating -e sh -c 'center-window && mix test ${kak_buffile}:${kak_cursor_line} && read || read' > /dev/null 2>&1 < /dev/null &
+}}
+

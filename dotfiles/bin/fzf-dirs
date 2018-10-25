@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Searches directories using Rofi
+# Requires RipGrep and Rofi
+#rg -L --sort-files --files --no-messages --null $@ | xargs -0 dirname | uniq | rofi -dmenu -matching fuzzy -sort -p files -l 15 -font 'Consolas Nerd Font 12' -width 25
+list-dirs $@ | fzf

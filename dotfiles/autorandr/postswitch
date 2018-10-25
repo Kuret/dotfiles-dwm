@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#sleep 5
+feh --bg-scale --randomize $HOME/Pictures/Wallpapers
+#eval $HOME/bin/poly.sh
+eval $HOME/.config/bspwm/bspwmrc

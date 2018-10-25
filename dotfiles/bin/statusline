@@ -1,0 +1,14 @@
+#!/bin/bash
+
+while true
+do
+  DATE=$(date +'%R');
+  VOL=$($HOME/bin/volume)
+  CON=$(iwgetid -r)
+  BAT=$($HOME/bin/battery)
+
+  xsetroot -name "$([ -n "$BAT" ] && echo "bat: $BAT")   con: $CON   vol: $VOL   $DATE   "
+
+  sleep 0.5
+done &
+
